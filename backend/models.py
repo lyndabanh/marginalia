@@ -17,13 +17,15 @@ class QuestionSource(enum.Enum):
     ai_notes = "ai_notes"
     ai_general = "ai_general"
     user = "user"
-    
+
 class User(Base):
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str]
     email: Mapped[str] = mapped_column(unique=True, index=True)
+    location: Mapped[Optional[str]]
+    avatar: Mapped[Optional[str]]
     password_hash: Mapped[str]
     created_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(timezone.utc))
 
