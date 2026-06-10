@@ -57,6 +57,23 @@ def register(request: RegisterRequest, db: Session = Depends(get_db)):
         algorithm="HS256"
     )
 
-    return TokenResponse(
-        access_token=jwt_token
+    return TokenResponse(access_token=jwt_token)
+
+@router.post("/login", response_model=TokenResponse)
+def login(request: LoginRequest, db: Session = Depends(get_db)):
+    query = select(User).where(User.email == request.email)
+    user = db.scalars(query).first()
+    
+    if not user or not pwd_context.verify(request.password, user.password_hash):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid credentials"
+        )
+    
+    jwt_token = jwt.encode(
+        {"sub": str(user.id)},
+        SECRET_KEY,
+        algorithm="HS256"
     )
+
+    return TokenResponse(access_token=jwt_token)
