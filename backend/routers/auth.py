@@ -1,9 +1,9 @@
 import os
 
+import bcrypt
 from dotenv import load_dotenv
 from fastapi import APIRouter, Depends, HTTPException, status
 from jose import jwt
-from passlib.context import CryptContext
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -13,7 +13,6 @@ from models import User
 
 load_dotenv()
 SECRET_KEY = os.getenv("SECRET_KEY")
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -44,7 +43,7 @@ def register(request: RegisterRequest, db: Session = Depends(get_db)):
     user = User(
         name=request.name,
         email=request.email,
-        password_hash=pwd_context.hash(request.password)
+        password_hash=bcrypt.hashpw(request.password.encode(), bcrypt.gensalt()).decode()
     )
 
     db.add(user)
@@ -64,7 +63,7 @@ def login(request: LoginRequest, db: Session = Depends(get_db)):
     query = select(User).where(User.email == request.email)
     user = db.scalars(query).first()
     
-    if not user or not pwd_context.verify(request.password, user.password_hash):
+    if not user or not bcrypt.checkpw(request.password.encode(), user.password_hash.encode()):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid credentials"
