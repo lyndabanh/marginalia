@@ -1,0 +1,79 @@
+from datetime import datetime
+from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+
+from database import get_db
+from dependencies import get_current_user
+from models import ReadingStatus, UserBook, User, Book
+from schemas import MessageResponse
+
+router = APIRouter(prefix="/userbooks", tags=["userbooks"])
+
+class AddUserBook(BaseModel):
+    isbn: str
+    title: str
+    author: str
+    cover_image: str | None = None
+    genre: str | None = None
+    summary: str | None = None
+    status: ReadingStatus = ReadingStatus.want_to_read
+
+class UserBookSummary(BaseModel):
+    userbook_id: int
+    title: str
+    author: str
+    cover_image: str | None = None
+    genre: str | None = None
+    status: ReadingStatus
+
+class UserBookDetail(BaseModel):
+    userbook_id: int
+    title: str
+    author: str
+    cover_image: str | None = None
+    genre: str | None = None
+    summary: str | None = None
+    rating: int | None = None
+    review: str | None = None
+    date_started: datetime | None = None
+    date_finished: datetime | None = None
+    status: ReadingStatus
+
+class UpdateUserBook(BaseModel):
+    status: ReadingStatus | None = None
+    rating: int | None = None 
+    review: str | None = None
+    date_started: datetime | None = None
+    date_finished: datetime | None = None
+
+@router.post("/", response_model=MessageResponse)
+def add_to_shelf(request: AddUserBook, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    book = db.scalars(select(Book).where(Book.isbn == request.isbn)).first()
+    if not book:
+        book = Book(
+            isbn=request.isbn,
+            title=request.title,
+            author=request.author,
+            cover_image=request.cover_image,
+            genre=request.genre,
+            summary=request.summary
+        )
+        db.add(book)
+        db.commit()
+        db.refresh(book)
+
+    existing = db.scalars(select(UserBook).where(UserBook.user_id == current_user.id, UserBook.book_id == book.id)).first()
+    if existing:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Book already on your shelf")
+    
+    userbook = UserBook(
+        user_id=current_user.id,
+        book_id=book.id,
+        status=request.status
+    )
+    db.add(userbook)
+    db.commit()
+    
+    return MessageResponse(message=f"'{book.title}' by {book.author} has been added to your bookshelf ")
