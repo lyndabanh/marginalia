@@ -17,6 +17,8 @@ class BookSearchResult(BaseModel):
     author: str | None = None
     isbn: str | None = None
     cover_image: str | None = None
+    genre: str | None = None
+    summary: str | None = None
     
 @router.get("/search", response_model=list[BookSearchResult])
 def search(q: str):
@@ -35,11 +37,16 @@ def search(q: str):
             elif identifier["type"] == "ISBN_10":
                 isbn = isbn10_to_isbn13(str(identifier["identifier"]))
 
+        categories = item["volumeInfo"].get("categories", [])
+        genre = ", ".join(categories) if categories else None
+
         results.append(BookSearchResult(
             title=item["volumeInfo"]["title"],
             author=item["volumeInfo"]["authors"][0] if item["volumeInfo"].get("authors") else None,
             isbn=isbn,
-            cover_image=item["volumeInfo"].get("imageLinks", {}).get("thumbnail")
+            cover_image=item["volumeInfo"].get("imageLinks", {}).get("thumbnail"),
+            genre=genre,
+            summary=item["volumeInfo"].get("description")
         ))
     
     return results
