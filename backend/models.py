@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 import enum
 from typing import Optional
 
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import UniqueConstraint, ForeignKey, Enum
 
 from database import Base
@@ -48,11 +48,13 @@ class UserBook(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
     book_id: Mapped[int] = mapped_column(ForeignKey("books.id"), index=True)
-    status: Mapped[ReadingStatus] = mapped_column(Enum(ReadingStatus))
+    status: Mapped[ReadingStatus] = mapped_column(Enum(ReadingStatus), default=ReadingStatus.want_to_read)
     rating: Mapped[Optional[int]]
     review: Mapped[Optional[str]]
     date_started: Mapped[Optional[datetime]]
     date_finished: Mapped[Optional[datetime]]
+    book: Mapped["Book"] = relationship("Book")
+    user: Mapped["User"] = relationship("User")
 
 class JournalEntry(Base):
     __tablename__ = "journalentries"
@@ -62,6 +64,8 @@ class JournalEntry(Base):
     book_id: Mapped[int] = mapped_column(ForeignKey("books.id"))
     content: Mapped[str]
     created_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(timezone.utc))
+    book: Mapped["Book"] = relationship("Book")
+    user: Mapped["User"] = relationship("User")
 
 class DiscussionQuestion(Base):
     __tablename__ = "discussionquestions"
@@ -74,3 +78,5 @@ class DiscussionQuestion(Base):
     source: Mapped[QuestionSource] = mapped_column(Enum(QuestionSource))
     is_shared: Mapped[bool] = mapped_column(default=False)
     created_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(timezone.utc))
+    book: Mapped["Book"] = relationship("Book")
+    user: Mapped["User"] = relationship("User")
