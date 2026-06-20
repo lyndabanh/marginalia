@@ -76,4 +76,22 @@ def add_to_shelf(request: AddUserBook, current_user: User = Depends(get_current_
     db.add(userbook)
     db.commit()
     
-    return MessageResponse(message=f"'{book.title}' by {book.author} has been added to your bookshelf ")
+    return MessageResponse(message=f"{book.title} by {book.author} has been added to your bookshelf")
+
+@router.get("/user/{user_id}", response_model=list[UserBookSummary])
+def get_bookshelf(user_id: int, db: Session = Depends(get_db)):
+    if not db.scalars(select(User).where(User.id == user_id)).first():
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    userbooks = db.scalars(select(UserBook).where(UserBook.user_id == user_id)).all()
+    result = []
+    for userbook in userbooks:
+        result.append(UserBookSummary(
+            userbook_id=userbook.id,
+            title=userbook.book.title,
+            author=userbook.book.author,
+            cover_image=userbook.book.cover_image,
+            genre=userbook.book.genre,
+            status=userbook.status
+        ))
+
+    return result
