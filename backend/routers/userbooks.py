@@ -5,7 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from database import get_db
-from dependencies import get_current_user
+from dependencies import get_current_user, check_ownership
 from models import ReadingStatus, UserBook, User, Book
 from schemas import MessageResponse
 
@@ -103,6 +103,38 @@ def get_userbook(userbook_id: int, db: Session = Depends(get_db)):
     if not userbook:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Userbook not found")
     
+    return UserBookDetail(
+        userbook_id=userbook.id,
+        title=userbook.book.title,
+        author=userbook.book.author,
+        cover_image=userbook.book.cover_image,
+        genre=userbook.book.genre,
+        summary=userbook.book.summary,
+        rating=userbook.rating,
+        review=userbook.review,
+        date_started=userbook.date_started,
+        date_finished=userbook.date_finished,
+        status=userbook.status
+    )
+
+@router.put("/{userbook_id}", response_model=UserBookDetail)
+def update_userbook(request: UpdateUserBook,
+                    userbook_id: int, 
+                    current_user: User = Depends(get_current_user), 
+                    db: Session = Depends(get_db)):
+    userbook = db.scalars(select(UserBook).where(UserBook.id == userbook_id)).first()
+    if not userbook:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Userbook not found")
+    
+    check_ownership(userbook.user_id, current_user.id)
+
+    updates = request.model_dump(exclude_unset=True)
+    for field, value in updates.items():
+        setattr(userbook, field, value)
+
+    db.commit()
+    db.refresh(userbook)
+
     return UserBookDetail(
         userbook_id=userbook.id,
         title=userbook.book.title,
