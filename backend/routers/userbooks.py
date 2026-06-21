@@ -95,3 +95,23 @@ def get_bookshelf(user_id: int, db: Session = Depends(get_db)):
         ))
 
     return result
+
+@router.get("/{userbook_id}", response_model=UserBookDetail)
+def get_userbook(userbook_id: int, db: Session = Depends(get_db)):
+    userbook = db.scalars(select(UserBook).where(UserBook.id == userbook_id)).first()
+    if not userbook:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Userbook not found")
+    
+    return UserBookDetail(
+        userbook_id=userbook.id,
+        title=userbook.book.title,
+        author=userbook.book.author,
+        cover_image=userbook.book.cover_image,
+        genre=userbook.book.genre,
+        summary=userbook.book.summary,
+        rating=userbook.rating,
+        review=userbook.review,
+        date_started=userbook.date_started,
+        date_finished=userbook.date_finished,
+        status=userbook.status
+    )
