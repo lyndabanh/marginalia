@@ -148,3 +148,20 @@ def update_userbook(request: UpdateUserBook,
         date_finished=userbook.date_finished,
         status=userbook.status
     )
+
+@router.delete("/{userbook_id}", response_model=MessageResponse)
+def delete_userbook(userbook_id: int, 
+                    current_user: User = Depends(get_current_user), 
+                    db: Session = Depends(get_db)):
+    userbook = db.scalars(select(UserBook).where(UserBook.id == userbook_id)).first()
+    if not userbook:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Userbook not found")
+
+    check_ownership(userbook.user_id, current_user.id)
+    
+    book_title = userbook.book.title
+
+    db.delete(userbook)
+    db.commit()
+
+    return MessageResponse(message=f"{book_title} has been removed from your bookshelf")
