@@ -83,6 +83,7 @@ def get_bookshelf(user_id: int, db: Session = Depends(get_db)):
     if not db.scalars(select(User).where(User.id == user_id)).first():
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     userbooks = db.scalars(select(UserBook).where(UserBook.user_id == user_id)).all()
+    
     result = []
     for userbook in userbooks:
         result.append(UserBookSummary(

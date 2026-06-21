@@ -44,6 +44,7 @@ def get_user(user_id: int, db: Session = Depends(get_db)):
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found"
         )
+    
     return user
 
 @router.put("/me", response_model=UserPrivateResponse)
@@ -54,6 +55,7 @@ def update_me(request: UserUpdate, current_user: User = Depends(get_current_user
             setattr(current_user, "password_hash", bcrypt.hashpw(value.encode(), bcrypt.gensalt()).decode())
         else:
             setattr(current_user, field, value)
+
     try:
         db.commit()
         db.refresh(current_user)
@@ -63,10 +65,12 @@ def update_me(request: UserUpdate, current_user: User = Depends(get_current_user
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email already in use"
         )
+    
     return current_user
 
 @router.delete("/me", response_model=MessageResponse)
-def delete_me(current_user: User = Depends(get_current_user) ,db: Session = Depends(get_db)):
+def delete_me(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     db.delete(current_user)
     db.commit()
+    
     return MessageResponse(message=f"{current_user.name} has been deleted")

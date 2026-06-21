@@ -27,7 +27,6 @@ def search(q: str):
     data = response.json()
 
     results = []
-
     for item in data["items"]:
         isbn = None
         for identifier in item["volumeInfo"].get("industryIdentifiers", []):

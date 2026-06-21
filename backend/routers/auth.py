@@ -31,9 +31,7 @@ class TokenResponse(BaseModel):
 
 @router.post("/register", response_model=TokenResponse)
 def register(request: RegisterRequest, db: Session = Depends(get_db)):
-    query = select(User).where(User.email == request.email)
-    user = db.scalars(query).first()
-
+    user = db.scalars(select(User).where(User.email == request.email)).first()
     if user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -45,7 +43,6 @@ def register(request: RegisterRequest, db: Session = Depends(get_db)):
         email=request.email,
         password_hash=bcrypt.hashpw(request.password.encode(), bcrypt.gensalt()).decode()
     )
-
     db.add(user)
     db.commit()
     db.refresh(user)
@@ -60,9 +57,7 @@ def register(request: RegisterRequest, db: Session = Depends(get_db)):
 
 @router.post("/login", response_model=TokenResponse)
 def login(request: LoginRequest, db: Session = Depends(get_db)):
-    query = select(User).where(User.email == request.email)
-    user = db.scalars(query).first()
-    
+    user = db.scalars(select(User).where(User.email == request.email)).first()
     if not user or not bcrypt.checkpw(request.password.encode(), user.password_hash.encode()):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
