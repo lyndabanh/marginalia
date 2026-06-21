@@ -39,6 +39,7 @@ class Book(Base):
     cover_image: Mapped[Optional[str]]
     genre: Mapped[Optional[str]]
     summary: Mapped[Optional[str]]
+    created_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(timezone.utc))
     deleted_at: Mapped[Optional[datetime]]
 
 class UserBook(Base):
@@ -53,6 +54,7 @@ class UserBook(Base):
     review: Mapped[Optional[str]]
     date_started: Mapped[Optional[datetime]]
     date_finished: Mapped[Optional[datetime]]
+    created_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(timezone.utc))    
     book: Mapped["Book"] = relationship("Book")
     user: Mapped["User"] = relationship("User")
 
