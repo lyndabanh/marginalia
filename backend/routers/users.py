@@ -14,11 +14,13 @@ from schemas import BaseResponse, MessageResponse
 router = APIRouter(prefix="/users", tags=["users"])
 
 class UserPublicResponse(BaseResponse):
+    id: int
     name: str
     location: str | None = None
     avatar: str | None = None
 
 class UserPrivateResponse(BaseResponse):
+    id: int
     name: str
     email: str
     location: str | None = None
