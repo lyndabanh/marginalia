@@ -48,7 +48,7 @@ class UpdateUserBook(BaseModel):
     date_started: datetime | None = None
     date_finished: datetime | None = None
 
-@router.post("/", response_model=MessageResponse)
+@router.post("/", response_model=UserBookDetail)
 def add_to_shelf(request: AddUserBook, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     book = db.scalars(select(Book).where(Book.isbn == request.isbn)).first()
     if not book:
@@ -75,8 +75,21 @@ def add_to_shelf(request: AddUserBook, current_user: User = Depends(get_current_
     )
     db.add(userbook)
     db.commit()
-    
-    return MessageResponse(message=f"{book.title} by {book.author} has been added to your bookshelf")
+    db.refresh(userbook)
+
+    return UserBookDetail(
+        userbook_id=userbook.id,
+        title=userbook.book.title,
+        author=userbook.book.author,
+        cover_image=userbook.book.cover_image,
+        genre=userbook.book.genre,
+        summary=userbook.book.summary,
+        rating=userbook.rating,
+        review=userbook.review,
+        date_started=userbook.date_started,
+        date_finished=userbook.date_finished,
+        status=userbook.status,
+    )
 
 @router.get("/user/{user_id}", response_model=list[UserBookSummary])
 def get_bookshelf(user_id: int, db: Session = Depends(get_db)):
