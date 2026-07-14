@@ -22,6 +22,7 @@ class AddUserBook(BaseModel):
 
 class UserBookSummary(BaseModel):
     userbook_id: int
+    book_id: int
     title: str
     author: str
     cover_image: str | None = None
@@ -30,6 +31,7 @@ class UserBookSummary(BaseModel):
 
 class UserBookDetail(BaseModel):
     userbook_id: int
+    book_id: int
     title: str
     author: str
     cover_image: str | None = None
@@ -79,6 +81,7 @@ def add_to_shelf(request: AddUserBook, current_user: User = Depends(get_current_
 
     return UserBookDetail(
         userbook_id=userbook.id,
+        book_id=userbook.book_id,
         title=userbook.book.title,
         author=userbook.book.author,
         cover_image=userbook.book.cover_image,
@@ -101,6 +104,7 @@ def get_bookshelf(user_id: int, db: Session = Depends(get_db)):
     for userbook in userbooks:
         result.append(UserBookSummary(
             userbook_id=userbook.id,
+            book_id=userbook.book_id,
             title=userbook.book.title,
             author=userbook.book.author,
             cover_image=userbook.book.cover_image,
@@ -118,6 +122,7 @@ def get_userbook(userbook_id: int, db: Session = Depends(get_db)):
     
     return UserBookDetail(
         userbook_id=userbook.id,
+        book_id=userbook.book_id,
         title=userbook.book.title,
         author=userbook.book.author,
         cover_image=userbook.book.cover_image,
@@ -150,6 +155,7 @@ def update_userbook(request: UpdateUserBook,
 
     return UserBookDetail(
         userbook_id=userbook.id,
+        book_id=userbook.book_id,
         title=userbook.book.title,
         author=userbook.book.author,
         cover_image=userbook.book.cover_image,
