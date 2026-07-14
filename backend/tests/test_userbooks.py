@@ -1,12 +1,4 @@
-EAST_OF_EDEN = {
-    "isbn": "9780670033041",
-    "title": "East of Eden",
-    "author": "John Steinbeck",
-    "cover_image": "http://books.google.com/books/content?id=1qdPEAAAQBAJ&printsec=frontcover&img=1&zoom=1&edge=curl&source=gbs_api",
-    "genre": "Fiction",
-    "summary": "A masterpiece of Biblical scope, and the magnum opus of one of America's most enduring authors, in a commemorative hardcover edition.",
-    "status": "want_to_read"
-}
+from tests.constants import EAST_OF_EDEN
 
 def test_add_to_shelf(client, auth_headers):
     response = client.post("/userbooks/", json=EAST_OF_EDEN, headers=auth_headers)
